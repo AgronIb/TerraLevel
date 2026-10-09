@@ -1,48 +1,57 @@
 # TerraLevel
 
-Adds a new hoe mode to Valheim 1.0: **Level Ground (TerraLevel)**.
+A hoe mode for Valheim 1.0 that actually flattens terrain.
 
-- Levels terrain to the ground height under the cursor, like vanilla Level Ground, but without the ±8 m cap.
-- Radius is adjustable in-game: hold the modifier key (default Left Ctrl) and scroll the mouse wheel.
-- Vanilla Level Ground and Raise Ground keep their 8 m limit unless you enable `UnlimitedForVanillaTools`.
+Vanilla **Level Ground** only nudges the ground toward the cursor height by about 1 m per click and refuses to move terrain more than 8 m from its original height. Hills and cliffs never get flat. TerraLevel adds a second hoe entry, **Level Ground (TerraLevel)**, that sets every point in the circle to the exact height under the cursor in one click, with no height cap, and lets you pick the radius on the fly.
 
-## Requirements
+## Features
 
-- Valheim 1.0 (tested on 1.0.17, Steam build 25730771, 2026-10-06)
-- [BepInExPack_Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) 5.4.2351+
-- [Jötunn](https://thunderstore.io/c/valheim/p/ValheimModding/Jotunn/) 2.30.2+
+- One-click flat disc at cursor height. No ±8 m limit (configurable cap, default 10 000 m).
+- **Hold Left Ctrl + scroll** to change the radius (0.5–20 m by default). A ring on the placement ghost shows the current size.
+- Hard, clean edge by default. Optional vanilla-style smoothing.
+- Vanilla Level Ground and Raise Ground are untouched unless you opt in with `UnlimitedForVanillaTools`.
+- Server-synced admin settings for height limit, radius limit and smoothing.
+
+## Install
+
+With r2modman / Thunderstore Mod Manager: install, done. Dependencies are pulled in automatically.
+
+Manual: install [BepInExPack_Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) and [Jötunn](https://thunderstore.io/c/valheim/p/ValheimModding/Jotunn/), then drop `TerraLevel.dll` into `BepInEx/plugins/`.
 
 ## Multiplayer
 
-The mod must be installed on the **server and every client**. Terrain operations are applied by whichever peer owns the zone, and that peer has to know the TerraLevel tool. Jötunn blocks players without the mod from joining a server that has it.
+The mod must be installed on the **server and on every client**. Terrain changes are applied by whichever player (or the server) owns the area, and that peer has to know the TerraLevel tool. Players without the mod cannot join a server that has it.
 
-Height and radius limits are admin-only settings and are pushed from the server to all clients.
+Settings marked *synced* below are taken from the server and pushed to all clients.
 
 ## Configuration
 
-`BepInEx/config/com.terra.terralevel.cfg`
+`BepInEx/config/com.terra.terralevel.cfg` (also editable in-game with Configuration Manager).
 
-| Key | Default | Synced | Meaning |
+| Setting | Default | Synced | Meaning |
 |---|---|---|---|
-| General.MaxHeightDelta | 10000 | yes | Max height change in meters relative to original terrain for the TerraLevel tool |
+| General.MaxHeightDelta | 10000 | yes | Max height change in meters relative to the original terrain for the TerraLevel tool |
 | General.UnlimitedForVanillaTools | false | yes | Also lift the 8 m cap for vanilla Level Ground / Raise Ground |
-| General.SmoothEdges | false | yes | Run vanilla smoothing after levelling. Off = exactly flat disc, hard edge. On = soft edge but the disc tilts up to 1 m per click on slopes (vanilla artefact) |
-| Radius.DefaultRadius | 0 (= vanilla) | no | Radius when the tool is selected |
+| General.SmoothEdges | false | yes | Run vanilla smoothing after levelling. Off = exactly flat disc, hard edge. On = soft edge, but the disc tilts up to 1 m per click on slopes (vanilla behaviour) |
+| Radius.DefaultRadius | 0 (= vanilla 3 m) | no | Radius when the tool is selected |
 | Radius.MinRadius | 0.5 | no | Smallest selectable radius |
 | Radius.MaxRadius | 20 | yes | Largest selectable radius |
 | Radius.RadiusStep | 0.5 | no | Radius change per scroll notch |
-| Radius.ModifierKey | LeftControl | no | Hold + scroll to change radius |
+| Radius.ModifierKey | LeftControl | no | Hold this and scroll to change the radius |
 
-## Building
+## Known limitations
 
-1. Copy `Environment.props.example` to `Environment.props` and set `VALHEIM_INSTALL`, `BEPINEX_PATH`, `MOD_DEPLOYPATH`.
-2. `dotnet build -c Debug` (needs .NET SDK 8). The DLL is copied to `$(MOD_DEPLOYPATH)\TerraLevel\`.
+- Levelling a huge radius across a steep slope creates vertical walls. That is the point, but the terrain mesh can look stretched on very tall cuts.
+- Trees, rocks and buildings are not moved.
+- Console / Xbox / PlayStation players cannot use BepInEx mods.
 
-Game assemblies are referenced from the game folder and publicized at compile time; nothing from the game is committed.
+## Compatibility
 
-## How it works
+- Tested on Valheim 1.0.17 (Steam build 25730771) with BepInExPack_Valheim 5.4.2351 and Jötunn 2.30.2.
+- Should coexist with other hoe mods; it only touches its own tool and the three terrain clamp constants.
 
-- The tool is a Jötunn `CustomPiece` cloned from `mud_road_v2` and registered in the hoe piece table. Jötunn also registers its `TerrainOp` in `ObjectDB` so the zone owner can resolve it.
-- Harmony transpilers replace the `±8` literals in `TerrainComp.LevelTerrain`, `RaiseTerrain` and `ApplyToHeightmap` with calls that return the configured limit for TerraLevel ops (and always for `ApplyToHeightmap`, which rebuilds terrain on every client).
-- Since Valheim 1.0, `TerrainOp.Settings` is sent as a prefab hash only. The chosen radius is appended after the hash in the same `ZPackage`; vanilla readers ignore the tail, the TerraLevel reader applies it to a clone of the settings.
-- A postfix on `ZNetScene.Awake`, ordered after Jötunn's, re-adds the TerraLevel `TerrainOp` to ObjectDB's terrain-op registry if Jötunn ever stops doing it (no-op otherwise).
+## Source
+
+https://github.com/AgronIb/TerraLevel
+
+Build: copy `Environment.props.example` to `Environment.props`, set your game and BepInEx paths, `dotnet build -c Release` (needs .NET SDK 8). Game assemblies are referenced from your install and never redistributed.

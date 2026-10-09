@@ -180,7 +180,7 @@ namespace TerraLevel
                 CaptureRingTemplate();
 
                 Log.LogInfo($"Registered hoe piece '{OpContext.PrefabName}' (base radius {RadiusState.BaseRadius:0.00} m)");
-                Log.LogInfo($"Vanilla {BasePrefabName} settings: {OpContext.Describe(baseOp != null ? baseOp.m_settings : null)}");
+                Log.LogDebug($"Vanilla {BasePrefabName} settings: {OpContext.Describe(baseOp != null ? baseOp.m_settings : null)}");
             }
             catch (Exception ex)
             {

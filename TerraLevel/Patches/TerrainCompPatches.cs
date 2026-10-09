@@ -26,7 +26,7 @@ namespace TerraLevel.Patches
             OpContext.Unlimited = OpContext.IsOurs(modifier);
             if (OpContext.Unlimited)
             {
-                TerraLevelPlugin.Log.LogInfo($"TerraLevel op at y={pos.y:0.00} limit=±{OpContext.MaxDelta():0} {OpContext.Describe(modifier)}");
+                TerraLevelPlugin.Log.LogDebug($"TerraLevel op at y={pos.y:0.00} limit=±{OpContext.MaxDelta():0} {OpContext.Describe(modifier)}");
             }
         }
 
