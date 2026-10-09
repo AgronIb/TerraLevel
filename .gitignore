@@ -1,0 +1,38 @@
+# Build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.swp
+
+# Decompiled game code (regenerate locally, never commit)
+decompiled/
+publicized_assemblies/
+*_publicized.dll
+
+# Game / BepInEx reference DLLs (never commit)
+lib/
+refs/
+*.dll
+
+# Local paths
+*.props.user
+Directory.Build.props.local
+
+# Unity asset bundle projects
+UnityProject/Library/
+UnityProject/Temp/
+UnityProject/Logs/
+UnityProject/obj/
+
+# Thunderstore packaging output (manifest.json and icon.png in package/ are tracked)
+package/*.dll
+package/*.pdb
+package/README.md
+package/CHANGELOG.md
+*.zip
+
+# Local machine paths
+Environment.props

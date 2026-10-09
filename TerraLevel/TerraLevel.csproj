@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Machine-specific paths (VALHEIM_INSTALL, BEPINEX_PATH, MOD_DEPLOYPATH). Not committed. -->
+  <Import Project="..\Environment.props" Condition="Exists('..\Environment.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>TerraLevel</AssemblyName>
+    <RootNamespace>TerraLevel</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>terra</Authors>
+    <Description>Unlimited, resizable Level Ground mode for the Valheim hoe.</Description>
+    <DebugType>portable</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <VALHEIM_MANAGED>$(VALHEIM_INSTALL)\valheim_Data\Managed</VALHEIM_MANAGED>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Publicizes assembly_valheim at compile time so private game members are accessible. -->
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+    <!-- Jotunn.dll only; its prebuild targets are excluded (we reference game DLLs ourselves). -->
+    <PackageReference Include="JotunnLib" Version="2.30.2" ExcludeAssets="build;buildTransitive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="assembly_valheim" Publicize="true">
+      <HintPath>$(VALHEIM_MANAGED)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(VALHEIM_MANAGED)\assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(VALHEIM_MANAGED)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(VALHEIM_MANAGED)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(VALHEIM_MANAGED)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(VALHEIM_MANAGED)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Needed for overload resolution of Jötunn CustomPiece/CustomPrefab constructors. -->
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(VALHEIM_MANAGED)\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CheckEnvironment" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(VALHEIM_INSTALL)' == '' Or !Exists('$(VALHEIM_MANAGED)\assembly_valheim.dll')"
+           Text="VALHEIM_INSTALL is not set or does not contain valheim_Data\Managed\assembly_valheim.dll. Copy Environment.props.example to Environment.props and edit it." />
+    <Error Condition="'$(BEPINEX_PATH)' == '' Or !Exists('$(BEPINEX_PATH)\core\BepInEx.dll')"
+           Text="BEPINEX_PATH is not set or does not contain core\BepInEx.dll. Point it at a BepInEx folder (r2modman profile or game dir)." />
+  </Target>
+
+  <!-- Debug deploy: copy the plugin into the configured BepInEx plugins folder. -->
+  <Target Name="DeployToProfile" AfterTargets="Build" Condition="'$(MOD_DEPLOYPATH)' != '' And Exists('$(MOD_DEPLOYPATH)')">
+    <ItemGroup>
+      <_DeployFiles Include="$(TargetPath)" />
+      <_DeployFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </ItemGroup>
+    <MakeDir Directories="$(MOD_DEPLOYPATH)\TerraLevel" />
+    <Copy SourceFiles="@(_DeployFiles)" DestinationFolder="$(MOD_DEPLOYPATH)\TerraLevel" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="TerraLevel deployed to $(MOD_DEPLOYPATH)\TerraLevel" />
+  </Target>
+
+  <!-- Release: assemble the Thunderstore package (manifest.json + icon.png live in ..\package) and zip it. -->
+  <Target Name="PackageThunderstore" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <PackageDir>$(MSBuildProjectDirectory)\..\package</PackageDir>
+      <PackageZip>$(MSBuildProjectDirectory)\..\bin\$(AssemblyName)-$(Version).zip</PackageZip>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PkgFiles Include="$(TargetPath)" />
+      <_PkgFiles Include="$(MSBuildProjectDirectory)\..\README.md" />
+      <_PkgFiles Include="$(MSBuildProjectDirectory)\..\CHANGELOG.md" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(PackageDir)\manifest.json') Or !Exists('$(PackageDir)\icon.png')" Text="package\manifest.json and package\icon.png are required for a Thunderstore package." />
+    <Copy SourceFiles="@(_PkgFiles)" DestinationFolder="$(PackageDir)" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\..\bin" />
+    <Delete Files="$(PackageZip)" />
+    <ZipDirectory SourceDirectory="$(PackageDir)" DestinationFile="$(PackageZip)" />
+    <Message Importance="high" Text="Thunderstore package: $(PackageZip)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project>
+  <!--
+    Copy this file to Environment.props (gitignored) and edit the paths.
+
+    VALHEIM_INSTALL : Valheim game folder (contains valheim.exe and valheim_Data).
+    BEPINEX_PATH    : a BepInEx folder containing core\BepInEx.dll and core\0Harmony.dll.
+                      With r2modman this is <profile>\BepInEx.
+    MOD_DEPLOYPATH  : where Debug builds copy TerraLevel.dll. Usually $(BEPINEX_PATH)\plugins.
+  -->
+  <PropertyGroup>
+    <VALHEIM_INSTALL>C:\Program Files (x86)\Steam\steamapps\common\Valheim</VALHEIM_INSTALL>
+    <BEPINEX_PATH>$(APPDATA)\r2modmanPlus-local\Valheim\profiles\terralevel-dev\BepInEx</BEPINEX_PATH>
+    <MOD_DEPLOYPATH>$(BEPINEX_PATH)\plugins</MOD_DEPLOYPATH>
+  </PropertyGroup>
+</Project>
