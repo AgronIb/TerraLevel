@@ -1,7 +1,7 @@
 {
   "name": "TerraLevel",
   "version_number": "0.1.0",
-  "website_url": "https://github.com/terra/TerraLevel",
+  "website_url": "https://github.com/AgronIb/TerraLevel",
   "description": "Hoe mode that levels ground with no height limit and a scroll-adjustable radius. Valheim 1.0.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2351",
