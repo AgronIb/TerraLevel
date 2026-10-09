@@ -54,8 +54,5 @@ namespace TerraLevel
             var max = Mathf.Max(min, Cfg.MaxRadius.Value);
             return Mathf.Clamp(value, min, max);
         }
-
-        /// <summary>Scale factor to apply to the placement ghost so its visual matches the chosen radius.</summary>
-        public static float GhostScale => BaseRadius > 0f ? Current / BaseRadius : 1f;
     }
 }

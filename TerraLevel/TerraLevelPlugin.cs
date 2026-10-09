@@ -67,16 +67,76 @@ namespace TerraLevel
                 player.Message(MessageHud.MessageType.Center, $"Radius {RadiusState.Current:0.0} m");
             }
 
-            var ghost = player.m_placementGhost;
+            UpdateGhostRing(player.m_placementGhost);
+        }
+
+        private const string RingObjectName = "TerraLevelRing";
+        private const int RingSegmentsPerMeter = 6;
+
+        private CircleProjector _ringTemplate;
+        private GameObject _ringGhost;
+        private CircleProjector _ring;
+
+        /// <summary>
+        /// Valheim draws ward / crafting-station areas with CircleProjector: a ring of small segment objects
+        /// re-placed on the terrain every frame. The hoe ghost has none, so we borrow the ward's segment prefab
+        /// and layer mask and attach our own ring to the ghost.
+        /// </summary>
+        private void CaptureRingTemplate()
+        {
+            var ward = PrefabManager.Instance.GetPrefab("guard_stone");
+            var area = ward != null ? ward.GetComponent<PrivateArea>() : null;
+            _ringTemplate = area != null ? area.m_areaMarker : null;
+
+            if (_ringTemplate == null)
+            {
+                var bench = PrefabManager.Instance.GetPrefab("piece_workbench");
+                _ringTemplate = bench != null ? bench.GetComponentInChildren<CircleProjector>(true) : null;
+            }
+
+            if (_ringTemplate == null || _ringTemplate.m_prefab == null)
+            {
+                Log.LogWarning("No CircleProjector template found (guard_stone / piece_workbench); radius ring disabled.");
+                _ringTemplate = null;
+            }
+        }
+
+        private void UpdateGhostRing(GameObject ghost)
+        {
             if (ghost == null)
+            {
+                _ringGhost = null;
+                _ring = null;
+                return;
+            }
+
+            if (!ReferenceEquals(ghost, _ringGhost))
+            {
+                // New ghost instance (piece re-selected). Reuse a vanilla ring if the prefab has one, else add ours.
+                _ringGhost = ghost;
+                _ring = ghost.GetComponentInChildren<CircleProjector>(true);
+                if (_ring == null && _ringTemplate != null)
+                {
+                    var ringObject = new GameObject(RingObjectName);
+                    ringObject.transform.SetParent(ghost.transform, false);
+                    _ring = ringObject.AddComponent<CircleProjector>();
+                    _ring.m_prefab = _ringTemplate.m_prefab;
+                    _ring.m_mask = _ringTemplate.m_mask;
+                    _ring.m_speed = _ringTemplate.m_speed;
+                    _ring.m_turns = 1f;
+                    _ring.m_start = 0f;
+                    _ring.m_sliceLines = false;
+                }
+            }
+
+            if (_ring == null)
             {
                 return;
             }
 
-            var prefab = player.m_buildPieces != null ? player.m_buildPieces.GetSelectedPrefab() : null;
-            var baseScale = prefab != null ? prefab.transform.localScale : Vector3.one;
-            var s = RadiusState.GhostScale;
-            ghost.transform.localScale = new Vector3(baseScale.x * s, baseScale.y, baseScale.z * s);
+            var radius = RadiusState.Current;
+            _ring.m_radius = radius;
+            _ring.m_nrOfSegments = Mathf.Clamp(Mathf.RoundToInt(radius * RingSegmentsPerMeter), 12, 160);
         }
 
         private static void AddLocalization()
@@ -116,6 +176,8 @@ namespace TerraLevel
 
                 var piece = new CustomPiece(OpContext.PrefabName, BasePrefabName, config);
                 PieceManager.Instance.AddPiece(piece);
+
+                CaptureRingTemplate();
 
                 Log.LogInfo($"Registered hoe piece '{OpContext.PrefabName}' (base radius {RadiusState.BaseRadius:0.00} m)");
                 Log.LogInfo($"Vanilla {BasePrefabName} settings: {OpContext.Describe(baseOp != null ? baseOp.m_settings : null)}");
