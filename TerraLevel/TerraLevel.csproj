@@ -97,6 +97,7 @@
       <_PkgFiles Include="$(TargetPath)" />
       <_PkgFiles Include="$(MSBuildProjectDirectory)\..\README.md" />
       <_PkgFiles Include="$(MSBuildProjectDirectory)\..\CHANGELOG.md" />
+      <_PkgFiles Include="$(MSBuildProjectDirectory)\..\LICENSE" />
     </ItemGroup>
     <Error Condition="!Exists('$(PackageDir)\manifest.json') Or !Exists('$(PackageDir)\icon.png')" Text="package\manifest.json and package\icon.png are required for a Thunderstore package." />
     <Copy SourceFiles="@(_PkgFiles)" DestinationFolder="$(PackageDir)" />

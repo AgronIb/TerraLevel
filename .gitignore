@@ -32,6 +32,7 @@ package/*.dll
 package/*.pdb
 package/README.md
 package/CHANGELOG.md
+package/LICENSE
 *.zip
 
 # Local machine paths

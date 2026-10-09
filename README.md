@@ -50,8 +50,8 @@ Settings marked *synced* below are taken from the server and pushed to all clien
 - Tested on Valheim 1.0.17 (Steam build 25730771) with BepInExPack_Valheim 5.4.2351 and Jötunn 2.30.2.
 - Should coexist with other hoe mods; it only touches its own tool and the three terrain clamp constants.
 
-## Source
+## Source and license
 
-https://github.com/AgronIb/TerraLevel
+https://github.com/AgronIb/TerraLevel — MIT license.
 
 Build: copy `Environment.props.example` to `Environment.props`, set your game and BepInEx paths, `dotnet build -c Release` (needs .NET SDK 8). Game assemblies are referenced from your install and never redistributed.
