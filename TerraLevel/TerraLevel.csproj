@@ -76,14 +76,15 @@
            Text="BEPINEX_PATH is not set or does not contain core\BepInEx.dll. Point it at a BepInEx folder (r2modman profile or game dir)." />
   </Target>
 
-  <!-- Debug deploy: copy the plugin into the configured BepInEx plugins folder. -->
-  <Target Name="DeployToProfile" AfterTargets="Build" Condition="'$(MOD_DEPLOYPATH)' != '' And Exists('$(MOD_DEPLOYPATH)')">
+  <!-- Debug deploy: copy the plugin into the configured BepInEx plugins folder.
+       A locked DLL (game running) only warns; Release builds never deploy. -->
+  <Target Name="DeployToProfile" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' And '$(MOD_DEPLOYPATH)' != '' And Exists('$(MOD_DEPLOYPATH)')">
     <ItemGroup>
       <_DeployFiles Include="$(TargetPath)" />
       <_DeployFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
     </ItemGroup>
     <MakeDir Directories="$(MOD_DEPLOYPATH)\TerraLevel" />
-    <Copy SourceFiles="@(_DeployFiles)" DestinationFolder="$(MOD_DEPLOYPATH)\TerraLevel" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_DeployFiles)" DestinationFolder="$(MOD_DEPLOYPATH)\TerraLevel" SkipUnchangedFiles="true" Retries="1" RetryDelayMilliseconds="200" ContinueOnError="WarnAndContinue" />
     <Message Importance="high" Text="TerraLevel deployed to $(MOD_DEPLOYPATH)\TerraLevel" />
   </Target>
 
